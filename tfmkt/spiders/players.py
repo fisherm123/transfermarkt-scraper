@@ -35,7 +35,6 @@ class PlayersSpider(BaseSpider):
           'base' : {
             'type': 'player',
             'href': href,
-            'parent': parent
           }
         }
 
@@ -66,7 +65,6 @@ class PlayersSpider(BaseSpider):
     attributes["last_name"] = self.safe_strip(name_element.xpath("strong/text()").get())
     attributes["number"] = self.safe_strip(name_element.xpath("span/text()").get())
 
-    attributes['name_in_home_country'] = response.xpath("//span[text()='Name in home country:']/following::span[1]/text()").get()
     attributes['date_of_birth'] = response.xpath("//span[text()='Date of birth:']/following::span[1]//text()").get()
     attributes['place_of_birth'] = {
       'country': response.xpath("//span[text()='Place of birth:']/following::span[1]/span/img/@title").get(),
@@ -76,39 +74,18 @@ class PlayersSpider(BaseSpider):
     attributes['height'] = response.xpath("//span[text()='Height:']/following::span[1]/text()").get()
     attributes['citizenship'] = response.xpath("//span[text()='Citizenship:']/following::span[1]/img/@title").get()
     attributes['position'] = self.safe_strip(response.xpath("//span[text()='Position:']/following::span[1]/text()").get())
-    attributes['player_agent'] = {
-      'href': response.xpath("//span[text()='Player agent:']/following::span[1]/a/@href").get(),
-      'name': response.xpath("//span[text()='Player agent:']/following::span[1]/a/text()").get()
-    }
+
     attributes['image_url'] = response.xpath("//img[@class='data-header__profile-image']/@src").get()
     attributes['current_club'] = {
       'href': response.xpath("//span[contains(text(),'Current club:')]/following::span[1]/a/@href").get()
     }
+
+    attributes['national_team'] = response.xpath("//li[contains(text(), 'Current international:')]/span/a/text()").get()
     attributes['foot'] = response.xpath("//span[text()='Foot:']/following::span[1]/text()").get()
-    attributes['joined'] = response.xpath("//span[text()='Joined:']/following::span[1]/text()").get()
-    attributes['contract_expires'] = self.safe_strip(response.xpath("//span[text()='Contract expires:']/following::span[1]/text()").get())
-    attributes['day_of_last_contract_extension'] = response.xpath("//span[text()='Date of last contract extension:']/following::span[1]/text()").get()
-    attributes['outfitter'] = response.xpath("//span[text()='Outfitter:']/following::span[1]/text()").get()
+  
 
-    current_market_value_text = self.safe_strip(response.xpath("//div[@class='tm-player-market-value-development__current-value']/text()").get())
-    current_market_value_link = self.safe_strip(response.xpath("//div[@class='tm-player-market-value-development__current-value']/a/text()").get())
-    if current_market_value_text: # sometimes the actual value is in the same level (https://www.transfermarkt.co.uk/femi-seriki/profil/spieler/638649)
-      attributes['current_market_value'] = current_market_value_text
-    else: # sometimes is one level down (https://www.transfermarkt.co.uk/rhys-norrington-davies/profil/spieler/543164)
-      attributes['current_market_value'] = current_market_value_link
-    attributes['highest_market_value'] = self.safe_strip(response.xpath("//div[@class='tm-player-market-value-development__max-value']/text()").get())
-
-    social_media_value_node = response.xpath("//span[text()='Social-Media:']/following::span[1]")
-    if len(social_media_value_node) > 0:
-      attributes['social_media'] = []
-      for element in social_media_value_node.xpath('div[@class="socialmedia-icons"]/a'):
-        href = element.xpath('@href').get()
-        attributes['social_media'].append(
-          href
-        )
-
-    # parse historical market value from figure
-    attributes['market_value_history'] = self.parse_market_history(response)
+    attributes['current_market_value_start'] = self.safe_strip(response.xpath("//a[@class='data-header__market-value-wrapper']/text()").get())
+    attributes['current_market_value_end'] = self.safe_strip(response.xpath("//a[@class='data-header__market-value-wrapper']/span[2]/text()").get())
 
     attributes['code'] = unquote(urlparse(base["href"]).path.split("/")[1])
 
